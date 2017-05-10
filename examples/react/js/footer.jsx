@@ -33,26 +33,36 @@ var app = app || {};
 						<li>
 							<a
 								href="#/"
-								className={classNames({selected: nowShowing === app.ALL_TODOS})}>
-									All
+								className={classNames({ selected: nowShowing === app.ALL_TODOS })}>
+								All
 							</a>
 						</li>
-						{' '}
 						<li>
 							<a
 								href="#/active"
-								className={classNames({selected: nowShowing === app.ACTIVE_TODOS})}>
-									Active
+								className={classNames({ selected: nowShowing === app.ACTIVE_TODOS })}
+							>
+								Active
 							</a>
 						</li>
-						{' '}
 						<li>
 							<a
 								href="#/completed"
-								className={classNames({selected: nowShowing === app.COMPLETED_TODOS})}>
-									Completed
+								className={classNames({ selected: nowShowing === app.COMPLETED_TODOS })}
+							>
+								Completed
 							</a>
 						</li>
+						{this.props.assignOptions.map((name) => (<li>
+							<a
+								href={`/#${name.toLowerCase()}`}
+								className={classNames({ selected: nowShowing === name.toLowerCase() })}
+							>
+								{name}
+							</a>
+						</li>
+						))
+						}
 					</ul>
 					{clearButton}
 				</footer>

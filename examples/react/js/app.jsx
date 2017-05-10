@@ -13,6 +13,7 @@ var app = app || {};
 	app.COMPLETED_TODOS = 'completed';
 	var TodoFooter = app.TodoFooter;
 	var TodoItem = app.TodoItem;
+	var ASSIGN_OPTIONS = ['Tom', 'Dick', 'Harry']
 
 	var ENTER_KEY = 13;
 
@@ -21,22 +22,33 @@ var app = app || {};
 			return {
 				nowShowing: app.ALL_TODOS,
 				editing: null,
-				newTodo: ''
+				newTodo: '',
+				assignTo: 'Tom'
 			};
 		},
 
 		componentDidMount: function () {
 			var setState = this.setState;
-			var router = Router({
-				'/': setState.bind(this, {nowShowing: app.ALL_TODOS}),
-				'/active': setState.bind(this, {nowShowing: app.ACTIVE_TODOS}),
-				'/completed': setState.bind(this, {nowShowing: app.COMPLETED_TODOS})
-			});
+			var routes = {
+				'/': setState.bind(this, { nowShowing: app.ALL_TODOS }),
+				'/active': setState.bind(this, { nowShowing: app.ACTIVE_TODOS }),
+				'/completed': setState.bind(this, { nowShowing: app.COMPLETED_TODOS })
+			}
+			var self = this
+			ASSIGN_OPTIONS.forEach(function (assTo) {
+				routes[`/${assTo.toLowerCase()}`] = setState.bind(self, { nowShowing: assTo.toLowerCase() })
+			})
+			var router = Router(routes);
 			router.init('/');
 		},
 
 		handleChange: function (event) {
-			this.setState({newTodo: event.target.value});
+			this.setState({ newTodo: event.target.value });
+		},
+
+		handleAssign: function (event) {
+			this.setState({ assignTo: event.target.value });
+			console.log(this.state.assignTo);
 		},
 
 		handleNewTodoKeyDown: function (event) {
@@ -47,10 +59,22 @@ var app = app || {};
 			event.preventDefault();
 
 			var val = this.state.newTodo.trim();
+			var assignTo = this.state.assignTo;
 
 			if (val) {
-				this.props.model.addTodo(val);
-				this.setState({newTodo: ''});
+				this.props.model.addTodo(val, assignTo);
+				this.setState({ newTodo: '' });
+			}
+		},
+
+		handleButtonClick: function () {
+
+			var val = this.state.newTodo.trim();
+			var assignTo = this.state.assignTo;
+
+			if (val) {
+				this.props.model.addTodo(val, assignTo);
+				this.setState({ newTodo: '' });
 			}
 		},
 
@@ -68,16 +92,16 @@ var app = app || {};
 		},
 
 		edit: function (todo) {
-			this.setState({editing: todo.id});
+			this.setState({ editing: todo.id });
 		},
 
-		save: function (todoToSave, text) {
-			this.props.model.save(todoToSave, text);
-			this.setState({editing: null});
+		save: function (todoToSave, text, assignTo) {
+			this.props.model.save(todoToSave, text, assignTo);
+			this.setState({ editing: null });
 		},
 
 		cancel: function () {
-			this.setState({editing: null});
+			this.setState({ editing: null });
 		},
 
 		clearCompleted: function () {
@@ -90,14 +114,20 @@ var app = app || {};
 			var todos = this.props.model.todos;
 
 			var shownTodos = todos.filter(function (todo) {
-				switch (this.state.nowShowing) {
-				case app.ACTIVE_TODOS:
+				var assignRoutes = ASSIGN_OPTIONS.map(function (name) {
+					return name.toLowerCase();
+				})
+				if (this.state.nowShowing == app.ACTIVE_TODOS) {
 					return !todo.completed;
-				case app.COMPLETED_TODOS:
-					return todo.completed;
-				default:
-					return true;
 				}
+				if (this.state.nowShowing == app.COMPLETED_TODOS) {
+					return todo.completed;
+				}
+				if (assignRoutes.indexOf(this.state.nowShowing) > -1) {
+					return todo.assignTo && todo.assignTo.toLowerCase() === this.state.nowShowing;
+				}
+				return true;
+
 			}, this);
 
 			var todoItems = shownTodos.map(function (todo) {
@@ -111,6 +141,7 @@ var app = app || {};
 						editing={this.state.editing === todo.id}
 						onSave={this.save.bind(this, todo)}
 						onCancel={this.cancel}
+						assignOptions={ASSIGN_OPTIONS}
 					/>
 				);
 			}, this);
@@ -128,6 +159,7 @@ var app = app || {};
 						completedCount={completedCount}
 						nowShowing={this.state.nowShowing}
 						onClearCompleted={this.clearCompleted}
+						assignOptions={ASSIGN_OPTIONS}
 					/>;
 			}
 
@@ -158,7 +190,22 @@ var app = app || {};
 							onKeyDown={this.handleNewTodoKeyDown}
 							onChange={this.handleChange}
 							autoFocus={true}
+							style={{ width: '58%' }}
 						/>
+						<select
+							style={{ width: '25%' }}
+							className="new-todo"
+							onChange={this.handleAssign}
+						>
+							{ASSIGN_OPTIONS.map((name) => (
+								<option value={name}>{name}</option>
+							))
+							}
+						</select>
+						<button
+							style={{ width: '15%', fontSize: '24px', border: '1px solid #CCC', borderRadius: '5px' }}
+							onClick={this.handleButtonClick}
+						>Save</button>
 					</header>
 					{main}
 					{footer}
@@ -171,7 +218,7 @@ var app = app || {};
 
 	function render() {
 		React.render(
-			<TodoApp model={model}/>,
+			<TodoApp model={model} />,
 			document.getElementsByClassName('todoapp')[0]
 		);
 	}

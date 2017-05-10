@@ -28,11 +28,12 @@ var app = app || {};
 		this.onChanges.forEach(function (cb) { cb(); });
 	};
 
-	app.TodoModel.prototype.addTodo = function (title) {
+	app.TodoModel.prototype.addTodo = function (title, assignTo) {
 		this.todos = this.todos.concat({
 			id: Utils.uuid(),
 			title: title,
-			completed: false
+			completed: false,
+			assignTo: assignTo
 		});
 
 		this.inform();
@@ -44,7 +45,7 @@ var app = app || {};
 		// we use map() and filter() everywhere instead of mutating the array or
 		// todo items themselves.
 		this.todos = this.todos.map(function (todo) {
-			return Utils.extend({}, todo, {completed: checked});
+			return Utils.extend({}, todo, { completed: checked });
 		});
 
 		this.inform();
@@ -54,7 +55,7 @@ var app = app || {};
 		this.todos = this.todos.map(function (todo) {
 			return todo !== todoToToggle ?
 				todo :
-				Utils.extend({}, todo, {completed: !todo.completed});
+				Utils.extend({}, todo, { completed: !todo.completed });
 		});
 
 		this.inform();
@@ -68,9 +69,9 @@ var app = app || {};
 		this.inform();
 	};
 
-	app.TodoModel.prototype.save = function (todoToSave, text) {
+	app.TodoModel.prototype.save = function (todoToSave, text, assignTo) {
 		this.todos = this.todos.map(function (todo) {
-			return todo !== todoToSave ? todo : Utils.extend({}, todo, {title: text});
+			return todo !== todoToSave ? todo : Utils.extend({}, todo, { title: text, assignTo: assignTo });
 		});
 
 		this.inform();

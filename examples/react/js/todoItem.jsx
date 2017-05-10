@@ -14,9 +14,13 @@ var app = app || {};
 	app.TodoItem = React.createClass({
 		handleSubmit: function (event) {
 			var val = this.state.editText.trim();
+			var assignTo = this.state.assignTo;
 			if (val) {
-				this.props.onSave(val);
-				this.setState({editText: val});
+				this.props.onSave(val, assignTo);
+				this.setState({
+					editText: val,
+					assignTo: assignTo
+				});
 			} else {
 				this.props.onDestroy();
 			}
@@ -24,12 +28,15 @@ var app = app || {};
 
 		handleEdit: function () {
 			this.props.onEdit();
-			this.setState({editText: this.props.todo.title});
+			this.setState({
+				editText: this.props.todo.title,
+				assignTo: this.props.todo.assignTo
+			});
 		},
 
 		handleKeyDown: function (event) {
 			if (event.which === ESCAPE_KEY) {
-				this.setState({editText: this.props.todo.title});
+				this.setState({ editText: this.props.todo.title });
 				this.props.onCancel(event);
 			} else if (event.which === ENTER_KEY) {
 				this.handleSubmit(event);
@@ -38,12 +45,18 @@ var app = app || {};
 
 		handleChange: function (event) {
 			if (this.props.editing) {
-				this.setState({editText: event.target.value});
+				this.setState({ editText: event.target.value });
+			}
+		},
+
+		handleAssign: function (event) {
+			if (this.props.editing) {
+				this.setState({ assignTo: event.target.value });
 			}
 		},
 
 		getInitialState: function () {
-			return {editText: this.props.todo.title};
+			return { editText: this.props.todo.title };
 		},
 
 		/**
@@ -57,7 +70,8 @@ var app = app || {};
 			return (
 				nextProps.todo !== this.props.todo ||
 				nextProps.editing !== this.props.editing ||
-				nextState.editText !== this.state.editText
+				nextState.editText !== this.state.editText ||
+				nextState.assignTo !== this.state.assignTo
 			);
 		},
 
@@ -89,18 +103,29 @@ var app = app || {};
 							onChange={this.props.onToggle}
 						/>
 						<label onDoubleClick={this.handleEdit}>
-							{this.props.todo.title}
+							<span style={{ display: 'inline-block', width: '61%' }}>{this.props.todo.title}</span> {this.props.todo.assignTo}
 						</label>
 						<button className="destroy" onClick={this.props.onDestroy} />
 					</div>
-					<input
-						ref="editField"
-						className="edit"
-						value={this.state.editText}
-						onBlur={this.handleSubmit}
-						onChange={this.handleChange}
-						onKeyDown={this.handleKeyDown}
-					/>
+					<div className="edit">
+						<input
+							ref="editField"
+							value={this.state.editText}
+							onChange={this.handleChange}
+							onKeyDown={this.handleKeyDown}
+							style={{ width: '40%' }}
+						/>
+						<select
+							style={{ width: '30%' }}
+							onChange={this.handleAssign}
+						>
+							{this.props.assignOptions.map((name) => (
+								<option value={name} selected={name == this.state.assignTo}>{name}</option>
+							))
+							}
+						</select>
+						<button style={{ width: '20%', border: '1px solid #CCC', borderRadius: '5px' }} onClick={this.handleSubmit}>Save</button>
+					</div>
 				</li>
 			);
 		}
